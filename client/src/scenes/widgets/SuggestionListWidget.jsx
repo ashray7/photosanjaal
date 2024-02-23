@@ -3,29 +3,30 @@ import Friend from "components/Friend";
 import WidgetWrapper from "components/WidgetWrapper";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setFriends } from "state";
+import { setSuggestedFriends } from "state";
 
 const SuggestionListWidget = ({ userId }) => {
   const dispatch = useDispatch();
   const { palette } = useTheme();
   const token = useSelector((state) => state.token);
+  const suggestedFriends = useSelector((state) => state.user.suggestedFriends);
   const friends = useSelector((state) => state.user.friends);
 
-  const getFriends = async () => {
+  const getFriendSuggestion = async () => {
     const response = await fetch(
-      `http://localhost:3001/users/${userId}/friends`,
+      `http://localhost:3001/users/${userId}/suggestfriend`,
       {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       }
     );
     const data = await response.json();
-    dispatch(setFriends({ friends: data }));
+    dispatch(setSuggestedFriends({ friends: data }));
   };
 
   useEffect(() => {
-    getFriends();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    getFriendSuggestion();
+  }, [friends]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <WidgetWrapper>
@@ -38,7 +39,7 @@ const SuggestionListWidget = ({ userId }) => {
         Suggestion List
       </Typography>
       <Box display="flex" flexDirection="column" gap="1.5rem">
-        {friends.map((friend) => (
+        {suggestedFriends?.map((friend) => (
           <Friend
             key={friend._id}
             friendId={friend._id}
@@ -53,5 +54,3 @@ const SuggestionListWidget = ({ userId }) => {
 };
 
 export default SuggestionListWidget;
-
-

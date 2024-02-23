@@ -35,11 +35,14 @@ const UserSchema = new mongoose.Schema(
       default: [],
     },
     location: String,
-    occupation: String,
+    occupation: {
+      type: Number,
+      ref: "Occupation",
+    },
     viewedProfile: Number,
     dob: {
       type: String,
-      default: moment().format('YYYY-MM-DD'),
+      default: moment().format("YYYY-MM-DD"),
       required: true,
     },
     impressions: Number,

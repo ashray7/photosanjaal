@@ -46,6 +46,7 @@ const UserWidget = ({ userId, picturePath }) => {
     viewedProfile,
     impressions,
     friends,
+    noOfMutualFriends
   } = user;
 
   return (
@@ -72,7 +73,8 @@ const UserWidget = ({ userId, picturePath }) => {
             >
               {firstName} {lastName}
             </Typography>
-            <Typography color={medium}>{friends.length} friends</Typography>
+            <Typography color={medium}>{friends?.length} friends</Typography>
+            {noOfMutualFriends ? <Typography color={medium}>(Mutual Friends : {noOfMutualFriends})</Typography> : <></>}
           </Box>
         </FlexBetween>
         <ManageAccountsOutlined />

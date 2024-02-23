@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -15,6 +15,7 @@ import { useDispatch } from "react-redux";
 import { setLogin } from "state";
 import Dropzone from "react-dropzone";
 import FlexBetween from "components/FlexBetween";
+import Autocomplete from "@mui/material/Autocomplete";
 
 const registerSchema = yup.object().shape({
   firstName: yup.string().required("required"),
@@ -22,9 +23,8 @@ const registerSchema = yup.object().shape({
   email: yup.string().email("invalid email").required("required"),
   password: yup.string().required("required"),
   location: yup.string().required("required"),
-  occupation: yup.string().required("required"),
   picture: yup.string().required("required"),
-  dob: yup.date().required("required")
+  dob: yup.date().required("required"),
 });
 
 const loginSchema = yup.object().shape({
@@ -38,7 +38,7 @@ const initialValuesRegister = {
   email: "",
   password: "",
   location: "",
-  occupation: "",
+
   picture: "",
   dob: "",
 };
@@ -50,6 +50,7 @@ const initialValuesLogin = {
 
 const Form = () => {
   const [pageType, setPageType] = useState("login");
+  const [occupationList, setOccupationList] = useState([]);
   const { palette } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -57,27 +58,80 @@ const Form = () => {
   const isLogin = pageType === "login";
   const isRegister = pageType === "register";
 
-  const register = async (values, onSubmitProps) => {
-    // this allows us to send form info with image
-    const formData = new FormData();
-    console.log(formData);
-    for (let value in values) {
-      formData.append(value, values[value]);
-    }
-    formData.append("picturePath", values.picture.name);
+  const [selectedOccupation, setSelectedOccupation] = useState(null);
 
-    const savedUserResponse = await fetch(
-      "http://localhost:3001/auth/register",
-      {
-        method: "POST",
-        body: formData,
+  const handleOccupationChange = (event, value) => {
+    // `value` is the selected occupation object
+    setSelectedOccupation(value);
+
+    // If you want to update your form state with the selected occupation id or name
+    // Example: handleChange({ target: { name: 'occupation', value: value.id } });
+  };
+
+  const getOccupation = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/occupation", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-    );
-    const savedUser = await savedUserResponse.json();
-    onSubmitProps.resetForm();
 
-    if (savedUser) {
-      setPageType("login");
+      const occupationList = await response.json();
+      setOccupationList(occupationList);
+    } catch (error) {
+      console.error("Error fetching occupation list:", error);
+    }
+  };
+
+  useEffect(() => {
+    getOccupation();
+  }, []);
+
+  const register = async (values, onSubmitProps) => {
+    try {
+      // Extract the occupation ID from the selectedOccupation
+      values = { ...values, occupation: selectedOccupation?.id };
+
+      // Create a FormData object
+      const formData = new FormData();
+
+      // Append each key-value pair to the FormData
+      for (let value in values) {
+        formData.append(value, values[value]);
+      }
+
+      // Append the picture to the FormData
+      formData.append("picturePath", values.picture.name);
+
+      // Send the form data to the server
+      const savedUserResponse = await fetch(
+        "http://localhost:3001/auth/register",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      // Check if the response is successful
+      if (savedUserResponse.ok) {
+        const savedUser = await savedUserResponse.json();
+        console.log(savedUser);
+
+        // Reset the form
+        onSubmitProps.resetForm();
+
+        // Handle page type change if needed
+        setPageType("login");
+      } else {
+        // Handle error if the response is not OK
+        console.error("Error registering user:", savedUserResponse.statusText);
+      }
+    } catch (error) {
+      // Handle other errors that might occur during the registration process
+      console.error("Error during registration:", error);
     }
   };
 
@@ -154,14 +208,14 @@ const Form = () => {
                   helperText={touched.lastName && errors.lastName}
                   sx={{ gridColumn: "span 2" }}
                 />
-                 <TextField
+                <TextField
                   label="Date of Birth"
                   type="date"
                   onBlur={handleBlur}
                   onChange={handleChange}
                   value={values.dob}
                   name="dob"
-                  InputLabelProps={{shrink: true}}
+                  InputLabelProps={{ shrink: true }}
                   error={Boolean(touched.dob) && Boolean(errors.dob)}
                   helperText={touched.dob && errors.dob}
                   sx={{ gridColumn: "span 4" }}
@@ -176,18 +230,34 @@ const Form = () => {
                   helperText={touched.location && errors.location}
                   sx={{ gridColumn: "span 4" }}
                 />
-                <TextField
-                  label="Occupation"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.occupation}
-                  name="occupation"
-                  error={
-                    Boolean(touched.occupation) && Boolean(errors.occupation)
-                  }
-                  helperText={touched.occupation && errors.occupation}
-                  sx={{ gridColumn: "span 4" }}
-                />
+                {occupationList && (
+                  <Autocomplete
+                    options={occupationList}
+                    getOptionLabel={(option) => option.name}
+                    value={selectedOccupation}
+                    onChange={handleOccupationChange}
+                    onBlur={handleBlur}
+                    sx={{ gridColumn: "span 4" }}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Occupation"
+                        name="occupation"
+                        value={values?.occupation}
+                        onChange={handleChange}
+                        error={
+                          Boolean(touched.occupation) &&
+                          Boolean(errors.occupation)
+                        }
+                        helperText={touched.occupation && errors.occupation}
+                        sx={{ gridColumn: "span 4" }}
+                      />
+                    )}
+                  />
+                )}
                 <Box
                   gridColumn="span 4"
                   border={`1px solid ${palette.neutral.medium}`}

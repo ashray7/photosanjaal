@@ -54,11 +54,11 @@ const Navbar = () => {
               color: primaryLight,
               cursor: "pointer",
             },
-          }}    //////////////////////////////////////////////////////////////////////
+          }} //////////////////////////////////////////////////////////////////////
         >
           Photosanjaal
         </Typography>
-        {isNonMobileScreens && (
+        {/* {isNonMobileScreens && (
           <FlexBetween
             backgroundColor={neutralLight}
             borderRadius="9px"
@@ -70,7 +70,7 @@ const Navbar = () => {
               <Search />
             </IconButton>
           </FlexBetween>
-        )}
+        )} */}
       </FlexBetween>
 
       {/* DESKTOP NAV */}
@@ -84,7 +84,7 @@ const Navbar = () => {
             )}
           </IconButton>
 
-              {/* dark palette above */}
+          {/* dark palette above */}
 
           {/* <Message sx={{ fontSize: "25px" }} /> */}
           {/* <Notifications sx={{ fontSize: "25px" }} /> */}
