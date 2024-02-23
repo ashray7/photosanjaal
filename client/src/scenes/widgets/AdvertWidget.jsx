@@ -16,20 +16,33 @@ const AdvertWidget = () => {
         </Typography>
         <Typography color={medium}>Create Ad</Typography>
       </FlexBetween>
-      <img
-        width="100%"
-        height="auto"
-        alt="advert"
-        src="http://localhost:3001/assets/waiwai.jpg"
-        style={{ borderRadius: "0.75rem", margin: "0.75rem 0" }}
-      />
+      <a
+        href="https://waiwai.com.np"
+        target="blank"
+        style={{ color: "medium", textDecoration: "none" }}
+      >
+        <img
+          width="100%"
+          height="auto"
+          alt="advert"
+          src="http://localhost:3001/assets/waiwai.jpg"
+          style={{ borderRadius: "0.75rem", margin: "0.75rem 0" }}
+        />
+      </a>
+
       <FlexBetween>
         <Typography color={main}>Wai Wai instant noodles</Typography>
-        <Typography color={medium}>waiwai.com</Typography>
+        <a
+          href="https://waiwai.com.np"
+          target="blank"
+          style={{ color: "medium", textDecoration: "none" }}
+        >
+          waiwai.com
+        </a>
       </FlexBetween>
       <Typography color={medium} m="0.5rem 0">
-        Enjoy Wai Wai noodles with your friends and family cooked or 
-        uncooked and get absolutely lost in the flavours.
+        Enjoy Wai Wai noodles with your friends and family cooked or uncooked
+        and get absolutely lost in the flavours.
       </Typography>
     </WidgetWrapper>
   );

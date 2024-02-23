@@ -47,7 +47,7 @@ const calculateAge = (dob) => {
 
   return age;
 };
-
+///////// cosine similarity ko calculation
 const cosineSimilarity = (vectorA, vectorB) => {
   if (vectorA.length !== vectorB.length) {
     throw new Error(
