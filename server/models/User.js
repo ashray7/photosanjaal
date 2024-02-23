@@ -1,29 +1,30 @@
 import mongoose from "mongoose";
+import moment from "moment";
 
 const UserSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
       required: true,
-      min: 2,
-      max: 50,
+      minlength: 2,
+      maxlength: 50,
     },
     lastName: {
       type: String,
       required: true,
-      min: 2,
-      max: 50,
+      minlength: 2,
+      maxlength: 50,
     },
     email: {
       type: String,
       required: true,
-      max: 50,
+      maxlength: 50,
       unique: true,
     },
     password: {
       type: String,
       required: true,
-      min: 5,
+      minlength: 5,
     },
     picturePath: {
       type: String,
@@ -36,6 +37,11 @@ const UserSchema = new mongoose.Schema(
     location: String,
     occupation: String,
     viewedProfile: Number,
+    dob: {
+      type: String,
+      default: moment().format('YYYY-MM-DD'),
+      required: true,
+    },
     impressions: Number,
   },
   { timestamps: true }

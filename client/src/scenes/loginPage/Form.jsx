@@ -24,6 +24,7 @@ const registerSchema = yup.object().shape({
   location: yup.string().required("required"),
   occupation: yup.string().required("required"),
   picture: yup.string().required("required"),
+  dob: yup.date().required("required")
 });
 
 const loginSchema = yup.object().shape({
@@ -39,6 +40,7 @@ const initialValuesRegister = {
   location: "",
   occupation: "",
   picture: "",
+  dob: "",
 };
 
 const initialValuesLogin = {
@@ -58,6 +60,7 @@ const Form = () => {
   const register = async (values, onSubmitProps) => {
     // this allows us to send form info with image
     const formData = new FormData();
+    console.log(formData);
     for (let value in values) {
       formData.append(value, values[value]);
     }
@@ -150,6 +153,18 @@ const Form = () => {
                   error={Boolean(touched.lastName) && Boolean(errors.lastName)}
                   helperText={touched.lastName && errors.lastName}
                   sx={{ gridColumn: "span 2" }}
+                />
+                 <TextField
+                  label="Date of Birth"
+                  type="date"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.dob}
+                  name="dob"
+                  InputLabelProps={{shrink: true}}
+                  error={Boolean(touched.dob) && Boolean(errors.dob)}
+                  helperText={touched.dob && errors.dob}
+                  sx={{ gridColumn: "span 4" }}
                 />
                 <TextField
                   label="Location"
