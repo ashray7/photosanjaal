@@ -1,5 +1,6 @@
 import {
   ChatBubbleOutlineOutlined,
+  DeleteOutline,
   FavoriteBorderOutlined,
   FavoriteOutlined,
   ShareOutlined,
@@ -24,6 +25,7 @@ const PostWidget = ({
   comments,
 }) => {
   const [isComments, setIsComments] = useState(false);
+  const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const token = useSelector((state) => state.token);
   const loggedInUserId = useSelector((state) => state.user._id);
@@ -33,6 +35,22 @@ const PostWidget = ({
   const { palette } = useTheme();
   const main = palette.neutral.main;
   const primary = palette.primary.main;
+
+  /////////////////////////////////////////////////////
+  const updatedMainColor = "#3366ff";
+
+  const deletePost = async () => {
+    const response = await fetch(`http://localhost:3001/posts`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId: loggedInUserId, postId: postId }),
+    });
+    const updatedPost = await response.json();
+    dispatch(setPost({ post: updatedPost }));
+  };
 
   const patchLike = async () => {
     const response = await fetch(`http://localhost:3001/posts/${postId}/like`, {
@@ -68,23 +86,39 @@ const PostWidget = ({
         />
       )}
       <FlexBetween mt="0.25rem">
-        <FlexBetween gap="1rem">
-          <FlexBetween gap="0.3rem">
-            <IconButton onClick={patchLike}>
-              {isLiked ? (
-                <FavoriteOutlined sx={{ color: primary }} />
-              ) : (
-                <FavoriteBorderOutlined />
-              )}
-            </IconButton>
-            <Typography>{likeCount}</Typography>
-          </FlexBetween>
+        <FlexBetween gap="1rem" sx={{ width: "100%" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              width: "100%",
+            }}
+          >
+            <Box>
+              <FlexBetween gap="0.3rem">
+                <IconButton onClick={patchLike}>
+                  {isLiked ? (
+                    <FavoriteOutlined sx={{ color: updatedMainColor }} />
+                  ) : (
+                    <FavoriteBorderOutlined />
+                  )}
+                </IconButton>
+                <Typography>{likeCount}</Typography>
+              </FlexBetween>
+            </Box>
+
+            {postUserId === user?._id && (
+              <IconButton onClick={deletePost}>
+                <DeleteOutline />
+              </IconButton>
+            )}
+          </Box>
 
           <FlexBetween gap="0.3rem">
-            <IconButton onClick={() => setIsComments(!isComments)}>
+            {/* <IconButton onClick={() => setIsComments(!isComments)}>
               <ChatBubbleOutlineOutlined />
             </IconButton>
-            <Typography>{comments.length}</Typography>
+            <Typography>{comments.length}</Typography> */}
           </FlexBetween>
         </FlexBetween>
 

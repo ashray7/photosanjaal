@@ -51,6 +51,7 @@ const initialValuesLogin = {
 const Form = () => {
   const [pageType, setPageType] = useState("login");
   const [occupationList, setOccupationList] = useState([]);
+  const [hobbiesList, setHobbiesList] = useState([]);
   const { palette } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -59,6 +60,7 @@ const Form = () => {
   const isRegister = pageType === "register";
 
   const [selectedOccupation, setSelectedOccupation] = useState(null);
+  const [selectedHobby, setSelectedHobby] = useState(null);
 
   const handleOccupationChange = (event, value) => {
     // `value` is the selected occupation object
@@ -66,6 +68,14 @@ const Form = () => {
 
     // If you want to update your form state with the selected occupation id or name
     // Example: handleChange({ target: { name: 'occupation', value: value.id } });
+  };
+
+  const handleHobbyChange = (event, value) => {
+    // `value` is the selected Hobby object
+    setSelectedHobby(value);
+
+    // If you want to update your form state with the selected Hobby id or name
+    // Example: handleChange({ target: { name: 'Hobby', value: value.id } });
   };
 
   const getOccupation = async () => {
@@ -86,14 +96,37 @@ const Form = () => {
     }
   };
 
+  const getHobbies = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/occupation/hobbies", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const hobbiesList = await response.json();
+      setHobbiesList(hobbiesList);
+    } catch (error) {
+      console.error("Error fetching hobbies list:", error);
+    }
+  };
+
   useEffect(() => {
     getOccupation();
+    getHobbies();
   }, []);
 
   const register = async (values, onSubmitProps) => {
     try {
       // Extract the occupation ID from the selectedOccupation
-      values = { ...values, occupation: selectedOccupation?.id };
+      values = {
+        ...values,
+        occupation: selectedOccupation?.id,
+        hobby: selectedHobby?.id,
+      };
 
       // Create a FormData object
       const formData = new FormData();
@@ -118,7 +151,6 @@ const Form = () => {
       // Check if the response is successful
       if (savedUserResponse.ok) {
         const savedUser = await savedUserResponse.json();
-        console.log(savedUser);
 
         // Reset the form
         onSubmitProps.resetForm();
@@ -253,6 +285,31 @@ const Form = () => {
                           Boolean(errors.occupation)
                         }
                         helperText={touched.occupation && errors.occupation}
+                        sx={{ gridColumn: "span 4" }}
+                      />
+                    )}
+                  />
+                )}
+                {hobbiesList && (
+                  <Autocomplete
+                    options={hobbiesList}
+                    getOptionLabel={(option) => option.name}
+                    value={selectedHobby}
+                    onChange={handleHobbyChange}
+                    onBlur={handleBlur}
+                    sx={{ gridColumn: "span 4" }}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Hobby"
+                        name="Hobby"
+                        value={values?.hobby}
+                        onChange={handleChange}
+                        error={Boolean(touched.hobby) && Boolean(errors.hobby)}
+                        helperText={touched.hobby && errors.hobby}
                         sx={{ gridColumn: "span 4" }}
                       />
                     )}

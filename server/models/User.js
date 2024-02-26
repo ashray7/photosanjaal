@@ -38,6 +38,12 @@ const UserSchema = new mongoose.Schema(
     occupation: {
       type: Number,
       ref: "Occupation",
+      required: true,
+    },
+    hobby: {
+      type: Number,
+      ref: "Hobbies",
+      required: true,
     },
     viewedProfile: Number,
     dob: {

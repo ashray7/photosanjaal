@@ -18,18 +18,41 @@ export const createPost = async (req, res) => {
       comments: [],
     });
     await newPost.save();
-
     const post = await Post.find();
+    // const post = await Post.find().sort({ createdAt: -1 });
     res.status(201).json(post);
   } catch (err) {
     res.status(409).json({ message: err.message });
   }
 };
 
+export const deletePosts = async (req, res) => {
+  try {
+    const { postId } = req.body;
+
+    // Check if the post with the given ID exists
+    const existingPost = await Post.findById(postId);
+
+    if (!existingPost) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Delete the post
+    await Post.findByIdAndDelete(postId);
+
+    const post = await Post.find();
+    res.status(201).json(post);
+  } catch (err) {
+    console.error("Error deleting post:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 /* READ */
 export const getFeedPosts = async (req, res) => {
   try {
-    const post = await Post.find();
+    const post = await Post.find().sort({ createdAt: -1 });
+    // const post = await Post.find();
     res.status(200).json(post);
   } catch (err) {
     res.status(404).json({ message: err.message });

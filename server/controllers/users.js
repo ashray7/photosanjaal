@@ -1,4 +1,5 @@
 import Occupation from "../models/Occupation.js";
+import Hobbies from "../models/Hobbies.js";
 import User from "../models/User.js";
 
 const calculateMutualFriends = async (id, user) => {
@@ -55,13 +56,13 @@ const cosineSimilarity = (vectorA, vectorB) => {
     );
   }
 
-  // Calculate dot product
+  //dot product
   const dotProduct = vectorA.reduce(
     (acc, val, index) => acc + val * vectorB[index],
     0
   );
 
-  // Calculate magnitudes
+  //magnitudes
   const magnitudeA = Math.sqrt(vectorA.reduce((acc, val) => acc + val ** 2, 0));
   const magnitudeB = Math.sqrt(vectorB.reduce((acc, val) => acc + val ** 2, 0));
 
@@ -70,24 +71,25 @@ const cosineSimilarity = (vectorA, vectorB) => {
     return 0;
   }
 
-  // Calculate cosine similarity
+  //cosine similarity
   const similarity = dotProduct / (magnitudeA * magnitudeB);
 
   return similarity;
 };
 
-/* READ */
+// read
 export const getUser = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findById(id);
     const occupation = await Occupation.findOne({ id: user?.occupation });
-
+    const hobbies = await Hobbies.findOne({ id: user?.hobby });
     // Include the number of mutual friends and occupation name inside the user data
     const newUserData = {
       ...user.toObject(),
       noOfMutualFriends: await calculateMutualFriends(req?.user?.id, user),
-      occupation: occupation?.name || "No Occupation", // handle case where occupation is null
+      occupation: occupation?.name || "No Occupation", // handle case where occupation is null,
+      hobby: hobbies?.name,
     };
 
     res.status(200).json(newUserData);
@@ -112,11 +114,15 @@ export const getUserFriends = async (req, res) => {
           lastName,
           occupation: friendOccupationId, // Use a different variable name to avoid conflicts
           location,
+          hobby: friendHobbyId,
           picturePath,
           dob,
         }) => {
           const friendOccupation = await Occupation.findOne({
             id: friendOccupationId,
+          });
+          const friendHobby = await Hobbies.findOne({
+            id: friendHobbyId,
           });
           return {
             _id,
@@ -124,6 +130,7 @@ export const getUserFriends = async (req, res) => {
             lastName,
             occupation: friendOccupation?.name || "No Occupation",
             location,
+            hobby: friendHobby?.name,
             picturePath,
             dob,
           };
@@ -150,6 +157,13 @@ export const getUserFriendSuggestions = async (req, res) => {
     );
 
     // Calculate cosine similarity scores
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    // Min-Max scaling function
+    const minMaxScaling = (value, min, max) => {
+      return (value - min) / (max - min);
+    };
+
+    // cosine similarity scores with min max scaling normalization
     const similarityScores = await Promise.all(
       otherUsers.map(async (otherUser) => {
         const mutualFriends = await calculateMutualFriends(
@@ -157,24 +171,71 @@ export const getUserFriendSuggestions = async (req, res) => {
           otherUser
         );
 
+        // min and max values declare
+        const minHobby = 0;
+        const maxHobby = 11;
+
+        const minOccupation = 0;
+        const maxOccupation = 11;
+
+        const minMutualFriends = 0;
+        const maxMutualFriends = 100;
+
+        const minAge = 0;
+        const maxAge = 100; // Replace with your actual range
+
+        // Normalize all attribute values to between 0 and 1
+        const personalUserVector = [
+          minMaxScaling(personalUser.occupation, minOccupation, maxOccupation),
+          minMaxScaling(mutualFriends, minMutualFriends, maxMutualFriends),
+          minMaxScaling(calculateAge(personalUser?.dob), minAge, maxAge),
+          minMaxScaling(personalUser?.hobby, minHobby, maxHobby),
+        ];
+
+        const otherUserVector = [
+          minMaxScaling(otherUser.occupation, minOccupation, maxOccupation),
+          minMaxScaling(
+            await calculateMutualFriends(otherUser?.id, personalUser),
+            minMutualFriends,
+            maxMutualFriends
+          ),
+          minMaxScaling(calculateAge(otherUser?.dob), minAge, maxAge),
+          minMaxScaling(otherUser?.hobby, minHobby, maxHobby),
+        ];
+
         return {
           _id: otherUser._id,
-          name: otherUser.name,
-          similarity: cosineSimilarity(
-            [
-              personalUser.occupation,
-              mutualFriends,
-              calculateAge(personalUser?.dob),
-            ],
-            [
-              otherUser.occupation,
-              await calculateMutualFriends(otherUser?.id, personalUser),
-              calculateAge(otherUser?.dob),
-            ]
-          ),
+          similarity: cosineSimilarity(personalUserVector, otherUserVector),
         };
       })
     );
+    // console.log(similarityScores);
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // const similarityScores = await Promise.all(
+    //   otherUsers.map(async (otherUser) => {
+    //     const mutualFriends = await calculateMutualFriends(
+    //       personalUser?.id,
+    //       otherUser
+    //     );
+
+    //     return {
+    //       _id: otherUser._id,
+    //       name: otherUser.name,
+    //       similarity: cosineSimilarity(
+    //         [
+    //           personalUser.occupation,
+    //           mutualFriends,
+    //           calculateAge(personalUser?.dob),
+    //         ],
+    //         [
+    //           otherUser.occupation,
+    //           await calculateMutualFriends(otherUser?.id, personalUser),
+    //           calculateAge(otherUser?.dob),
+    //         ]
+    //       ),
+    //     };
+    //   })
+    // );
 
     // Sort users by similarity in descending order
     const sortedSuggestions = similarityScores.sort(
@@ -184,7 +245,7 @@ export const getUserFriendSuggestions = async (req, res) => {
     const filteredSuggestions = similarityScores.filter(
       (suggestion) => !personalUser.friends.includes(suggestion._id.toString())
     );
-
+    /////////////////// number of friends suggested
     const top5Suggestions = filteredSuggestions.slice(0, 5);
 
     const friendsSuggestion = await Promise.all(
